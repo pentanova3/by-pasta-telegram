@@ -65,7 +65,6 @@ async function sabahBildirimi() {
     let msg = '<b>GUNAYDIN! BY Pasta Sabah Bildirimi</b>\n' + fDate(today) + '\n\n';
     msg += '<b>Istatistikler:</b>\n';
     msg += 'Bugun hazir olmasi gereken: <b>' + todayOrders.length + '</b> siparis\n';
-    msg += 'Tahmini ciro: <b>' + fMoney(totalRev) + '</b>\n';
     msg += 'Toplam bekleyen: <b>' + allWaiting.length + '</b>\n';
     if (overdueOrders.length > 0) msg += 'Gecikmis: <b>' + overdueOrders.length + '</b>\n';
     msg += '\n';
@@ -104,14 +103,13 @@ app.post('/sabah', async (req, res) => { await sabahBildirimi(); res.json({ ok: 
 
 // 2. Bugun alinan + bugune hazir siparis
 app.post('/bugun-siparis', async (req, res) => {
-  const { orderNo, customer, size, coating, time, branch, price, textTop } = req.body;
+  const { orderNo, customer, size, coating, time, branch, textTop } = req.body;
   let msg = '<b>BUGUN ALINAN VE BUGUNE HAZIR OLACAK SIPARIS</b>\n\n';
   msg += 'Siparis: <b>' + orderNo + '</b>\n';
   msg += 'Musteri: ' + customer + '\n';
   msg += size + ' - ' + coating + '\n';
   msg += 'Sube: ' + (branch||'-') + '\n';
   msg += 'Teslim saati: ' + time + '\n';
-  msg += 'Fiyat: ' + fMoney(price) + '\n';
   if (textTop) msg += 'Yazi: "' + textTop + '"';
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });

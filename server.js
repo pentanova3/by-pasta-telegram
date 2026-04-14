@@ -7,10 +7,17 @@ const TELEGRAM_TOKEN = '8688885911:AAGrkCzCKVeQc0X5RZto2Ghpc8ju5wpl8kA';
 const CHAT_ID = '-5150678634';
 const PORT = process.env.PORT || 8080;
 
-admin.initializeApp({
-  credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SA || '{}')),
-  projectId: 'by-pasta-siparis'
-});
+const serviceAccount = {
+  type: 'service_account',
+  project_id: 'by-pasta-siparis',
+  private_key_id: '418c97c6f78568d4a60ae8974f15f5932c8e1f4a',
+  private_key: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDItd3zqt06tCAG\nt0i7N+1wAob0zyU+n04VH3w1BfbpNw7KUemcQkaRoOQSpFnoyNC0xFaggNEZNrNy\ndjziHV0PMlPm8pmAVy0R8EN94u/mfkKfQoYAtArxtt6T7OjYzLuTitCrS0jbXO/9\nqEsMKhCVbbqMRSVOea/tIvzyMy+lcvDKv0fwcr5dg1yZk5NttC+uh95M6hzGsBfX\n80QAAj13lDGIyld3EkAoqbhSZICBe4+flqM4orrMFAQSLGfYgZDdXiy4cTg17KX+\nZ1cJZf3t3UECVkeT8TAjDY9K8qXmHHm2jcl08hKO9UrYGOBs+5ZsKERjVCrVyG7A\nEDj7CeOnAgMBAAECggEACXk2wLQ6kkrDjY2ZIT0X4pw77SeEhTAqaf99HVjquUH1\nW2ytBMhxYZj2gEAW/lB8NAwQYAMJ25F5ZthYh1Ow0MbPWayZvN+11jhA90V+4qI9\nrXFhDHzIXMsE4SE4Ma4i1xP2RXTdkNJngXwwDqLtpXVIbivVVvQ8xDSikSFZXmBj\nm5X9qblJKOmM52qp3gGm+/IKcEZChfujosPTYma/7RN4FjCGt3LkjDrdU+zYM9fm\nnQuQ7SY+k8qiJ0btf9LGzceO+FUq8x/7voOyrgTj47x3ZkiBjq4yB4adNiSW8A9q\nM7EgsCJ1kRX9K6QOqDndxQy+MsWt7bgAIx+xiMI8AQKBgQD/GS9DzmFDuno4zE2m\nyxgeIyAf1+ap9FDUutbEHXiu7jdq/427vvOxOBUZWtrCf8cPlJC2odeRzgujLjqW\ng6Zs33JXOyC1VURA7RqJIzZF8aAC8cuYBAQ5WODl5SAELlecEbzkPCRdAJVdvMG/\nYevAtvlmISHoO3WI3Vw7blctvwKBgQDJa3i9iTej8dF8cGYJ7nTQa1IHiNFXU2gt\nLUQn+fl5eaIWEVn+z5mX1wd4qsdqFnD8i0i9hd5+OxBFzuO9WiE2e9mQpLI5zhkK\nRIvSnLt6XG4yXHd/vWh90dhoV4yxqgB8SINKonlgE5kCKHrpS648Mowr+0E1hYeZ\nfTMp3uyUGQKBgFmLoKC/qDrbEZ4wcS2UayHhGJy0795Gybzy3QK4ia12J3PiwwDd\ndbOGyTk+QD44FksszmOdigs/daxRRPWivt/Gy988/S1KAgx8bm0nNBz3RUDjWaFB\n/62VulRYypVNIynAvDqtteIDm2rtIGGq4NOkJwWnqbxYatihQ4gFIosHAoGBAItx\n+DlgEkFSXTHFrx8ZE45nfnbw5d2LRQhh2lnC2lCbQPf+M0wR9cgFeoqz0TNFLhvp\nYgaz84F46p8pyMmC6JOL0ugs3abfZL6TDipVkAX6j+AV3DV3sCvLaAN0+VbW11cz\n7JFzQoydhMTVuaJiXtIWPK0GWfLv6xz8bLuENk2hAoGATlVvpqZ23x/AM7bFvatt\n5IJ5aQncMWF/fa7wqHobQJmhF01iftTyBsKf3RrxL2eY7Fb2+jVf63RJugE/DCqy\nZUDHJQvg9dLI14NFu7FTh+R8I/OXjEHm8R2QTO4Qu33qgE+VfZpgqONSPm2153fW\ncy0hBGA1KZ48Q1xTuVg0ZDo=\n-----END PRIVATE KEY-----\n",
+  client_email: 'firebase-adminsdk-fbsvc@by-pasta-siparis.iam.gserviceaccount.com',
+  client_id: '113751706185384082198',
+  auth_uri: 'https://accounts.google.com/o/oauth2/auth',
+  token_uri: 'https://oauth2.googleapis.com/token'
+};
+admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 const db = admin.firestore();
 
 async function loadData(key) {

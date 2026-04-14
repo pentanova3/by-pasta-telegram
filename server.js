@@ -184,4 +184,56 @@ app.post('/geri-bildirim', async (req, res) => {
 // CRON: Sabah 07:45 Turkiye
 cron.schedule('45 7 * * *', () => { console.log('CRON: Sabah'); sabahBildirimi(); }, { timezone: 'Europe/Istanbul' });
 
-app.listen(PORT, () => { console.log('BY Pasta Telegram Bot - Port: ' + PORT); });
+// CRON: Gun sonu 21:00 — yarim kalan isler
+cron.schedule('0 21 * * *', () => { console.log('CRON: Yarim kalan isler'); yarimKalanlar(); }, { timezone: 'Europe/Istanbul' });
+
+// YARIM KALAN ISLER — gun sonunda tamamlanmamis siparisler
+async function yarimKalanlar() {
+  console.log('Yarim kalan isler kontrolu...');
+  try {
+    const orders = await loadData('byp_orders');
+    if (!orders || !orders.length) return;
+
+    const now = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Istanbul'}));
+    const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+
+    // Bugun teslim edilmesi gerekip de hala arada kalan siparisler
+    const stuck = orders.filter(o =>
+      o.date === today &&
+      ['bekliyor', 'uretimde', 'hazir', 'sevkiyat'].includes(o.status)
+    );
+
+    if (stuck.length === 0) return; // Arada kalan yok, mesaj gonderme
+
+    const byStatus = {};
+    stuck.forEach(o => {
+      if (!byStatus[o.status]) byStatus[o.status] = [];
+      byStatus[o.status].push(o);
+    });
+
+    const statusLabel = {bekliyor:'BEKLIYOR', uretimde:'URETIMDE', hazir:'HAZIR', sevkiyat:'SEVKIYATTA'};
+
+    let msg = '<b>DIKKAT! ARADA KALAN SIPARISLER</b>\n';
+    msg += 'Bugun teslim edilmesi gerekip de tamamlanmamis siparisler:\n\n';
+    msg += 'Toplam: <b>' + stuck.length + '</b> siparis\n\n';
+
+    Object.entries(byStatus).forEach(function(entry) {
+      const status = entry[0];
+      const list = entry[1];
+      msg += '<b>' + (statusLabel[status] || status) + ' (' + list.length + '):</b>\n';
+      list.forEach(o => {
+        msg += '  ' + o.orderNo + ' - ' + o.customer + ' (' + (o.branch||'') + ') Saat: ' + o.time + '\n';
+      });
+      msg += '\n';
+    });
+
+    msg += 'Bu siparisler ya iptal edilmeli, ya teslim edildi ya da teslim edilemedi olarak guncellenmeli!';
+
+    await sendTelegram(msg);
+  } catch (err) { console.error('Yarim kalan isler hatasi:', err.message); }
+}
+
+// Manuel endpoint
+app.post('/yarim-kalan', async (req, res) => { await yarimKalanlar(); res.json({ ok: true }); });
+
+app.listen(PORT, () => { console.log('BY Pasta Telegram Bot - Port: ' + PORT + ' | Cron: 07:45 sabah, 21:00 yarim kalanlar'); });

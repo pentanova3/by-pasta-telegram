@@ -100,6 +100,17 @@ app.use((req, res, next) => {
 app.get('/', (req, res) => res.json({ status: 'By Pasta Telegram Bot çalışıyor', time: new Date().toISOString() }));
 app.get('/test', async (req, res) => { try { await sendTelegram('✅ By Pasta Telegram Bot — Test mesajı, sistem çalışıyor!'); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.post('/sabah', async (req, res) => { await sabahBildirimi(); res.json({ ok: true }); });
+app.get('/debug-sabah', async (req, res) => {
+  try {
+    const orders = await loadData('byp_orders');
+    const trNow = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Istanbul'}));
+    const today = trNow.toISOString().split('T')[0];
+    const ordersLen = orders ? orders.length : 'null';
+    const todayOrders = orders ? orders.filter(o => o.date === today && ['bekliyor','uretimde','hazir','sevkiyat'].includes(o.status)).length : 0;
+    const dates = orders ? [...new Set(orders.map(o=>o.date))].sort() : [];
+    res.json({ trNow: trNow.toISOString(), today, ordersLen, todayOrders, allDates: dates, serverUtc: new Date().toISOString() });
+  } catch(e) { res.json({ error: e.message }); }
+});
 
 // 2. Bugun alinan + bugune hazir siparis
 app.post('/bugun-siparis', async (req, res) => {

@@ -104,80 +104,91 @@ app.post('/sabah', async (req, res) => { await sabahBildirimi(); res.json({ ok: 
 // 2. Bugun alinan + bugune hazir siparis
 app.post('/bugun-siparis', async (req, res) => {
   const { orderNo, customer, size, coating, time, branch, textTop } = req.body;
-  let msg = '<b>BUGUN ALINAN VE BUGUNE HAZIR OLACAK SIPARIS</b>\n\n';
-  msg += 'Siparis: <b>' + orderNo + '</b>\n';
-  msg += 'Musteri: ' + customer + '\n';
-  msg += size + ' - ' + coating + '\n';
-  msg += 'Sube: ' + (branch||'-') + '\n';
-  msg += 'Teslim saati: ' + time + '\n';
-  if (textTop) msg += 'Yazi: "' + textTop + '"';
+  let msg = '🎂 <b>BUGÜNE HAZIR SİPARİŞ</b>\n\n';
+  msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + customer + '\n';
+  msg += '🍰 ' + size + ' - ' + coating + '\n';
+  msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  msg += '🕐 Teslim saati: ' + time + '\n';
+  if (textTop) msg += '✍️ Yazı: "' + textTop + '"';
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 3. Iptal bildirimi
 app.post('/iptal', async (req, res) => {
   const { orderNo, customer, branch, reason, by, status } = req.body;
-  const sl = {uretimde:'URETIMDE',bekliyor:'BUGUNE HAZIR'};
-  let msg = '<b>SIPARIS IPTAL EDILDI</b>\n';
-  msg += 'Durum: <b>' + (sl[status]||status) + '</b>\n\n';
-  msg += 'Siparis: <b>' + orderNo + '</b>\n';
-  msg += 'Musteri: ' + customer + '\n';
-  msg += 'Sube: ' + (branch||'-') + '\n';
-  msg += 'Gerekce: ' + reason + '\n';
-  msg += 'Iptal eden: ' + by;
+  const sl = {uretimde:'ÜRETİMDE',bekliyor:'BUGÜNE HAZIR'};
+  let msg = '❌ <b>SİPARİŞ İPTAL EDİLDİ</b>\n';
+  msg += '⚠️ Durum: <b>' + (sl[status]||status) + '</b>\n\n';
+  msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + customer + '\n';
+  msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  msg += '📌 Gerekçe: ' + reason + '\n';
+  msg += '👷 İptal eden: ' + by;
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 4. Bekleyen siparis iptal
 app.post('/bekleyen-iptal', async (req, res) => {
   const { orderNo, customer, branch, reason, by, delivDate } = req.body;
-  let msg = '<b>BEKLEYEN SIPARIS IPTAL EDILDI</b>\n\n';
-  msg += 'Siparis: <b>' + orderNo + '</b>\n';
-  msg += 'Musteri: ' + customer + '\n';
-  msg += 'Sube: ' + (branch||'-') + '\n';
-  msg += 'Teslim tarihi: ' + delivDate + '\n';
-  msg += 'Gerekce: ' + reason + '\n';
-  msg += 'Iptal eden: ' + by;
+  let msg = '❌ <b>BEKLEYEN SİPARİŞ İPTAL EDİLDİ</b>\n\n';
+  msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + customer + '\n';
+  msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  msg += '📅 Teslim tarihi: ' + delivDate + '\n';
+  msg += '📌 Gerekçe: ' + reason + '\n';
+  msg += '👷 İptal eden: ' + by;
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 5. ACIL - tarihi bugune alinan
 app.post('/acil', async (req, res) => {
   const { orderNo, customer, size, coating, branch, time, reason, by, oldDate } = req.body;
-  let msg = '<b>ACIL SIPARIS!</b>\n\n';
-  msg += 'Tarihi one alindi - BUGUN\n';
-  msg += 'Eski tarih: ' + oldDate + '\n\n';
-  msg += 'Siparis: <b>' + orderNo + '</b>\n';
-  msg += 'Musteri: ' + customer + '\n';
-  msg += size + ' - ' + coating + '\n';
-  msg += 'Sube: ' + (branch||'-') + '\n';
-  msg += 'Teslim saati: ' + time + '\n';
-  msg += 'Gerekce: ' + reason + '\n';
-  msg += 'Guncelleyen: ' + by;
+  let msg = '🚨 <b>ACİL SİPARİŞ!</b>\n\n';
+  msg += '⏰ Tarihi öne alındı — BUGÜN\n';
+  msg += '📅 Eski tarih: ' + oldDate + '\n\n';
+  msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + customer + '\n';
+  msg += '🍰 ' + size + ' - ' + coating + '\n';
+  msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  msg += '🕐 Teslim saati: ' + time + '\n';
+  msg += '📌 Gerekçe: ' + reason + '\n';
+  msg += '👷 Güncelleyen: ' + by;
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 6. Teslim edilemedi
 app.post('/teslim-edilemedi', async (req, res) => {
   const { orderNo, customer, branch, reason, by } = req.body;
-  let msg = '<b>TESLIM EDILEMEDI!</b>\n\n';
-  msg += 'Siparis: <b>' + orderNo + '</b>\n';
-  msg += 'Musteri: ' + customer + '\n';
-  msg += 'Sube: ' + (branch||'-') + '\n';
-  msg += 'Gerekce: ' + reason + '\n';
-  msg += 'Kaydeden: ' + by;
+  let msg = '⚠️ <b>TESLİM EDİLEMEDİ!</b>\n\n';
+  msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + customer + '\n';
+  msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  msg += '📌 Gerekçe: ' + reason + '\n';
+  msg += '👷 Kaydeden: ' + by;
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // 7. Musteri geri bildirimi
 app.post('/geri-bildirim', async (req, res) => {
   const { orderNo, customer, branch, feedback, by } = req.body;
-  let msg = '<b>MUSTERI GERI BILDIRIMI</b>\n\n';
-  msg += 'Siparis: <b>' + orderNo + '</b>\n';
-  msg += 'Musteri: ' + customer + '\n';
-  msg += 'Sube: ' + (branch||'-') + '\n';
-  msg += 'Geri bildirim: ' + feedback + '\n';
-  msg += 'Kaydeden: ' + by;
+  let msg = '⭐ <b>MÜŞTERİ GERİ BİLDİRİMİ</b>\n\n';
+  msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + customer + '\n';
+  msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  msg += '💬 Değerlendirme: ' + feedback + '\n';
+  msg += '📌 Kaynak: ' + by;
+  try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/tezgahtar-notu', async (req, res) => {
+  const { orderNo, customer, branch, note, by } = req.body;
+  let msg = '📝 <b>TEZGAHTAR NOTU</b>\n\n';
+  msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + customer + '\n';
+  msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  msg += '✏️ Not: ' + note + '\n';
+  msg += '👷 Yazan: ' + by;
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

@@ -236,4 +236,54 @@ async function yarimKalanlar() {
 // Manuel endpoint
 app.post('/yarim-kalan', async (req, res) => { await yarimKalanlar(); res.json({ ok: true }); });
 
+// AI FIYAT TAHMINI PROXY — tarayicidan CORS engeli oldugu icin Railway uzerinden
+app.post('/ai-fiyat', async (req, res) => {
+  const { base64, mediaType, priceInfo } = req.body;
+  if (!base64 || !priceInfo) return res.status(400).json({ error: 'base64 ve priceInfo zorunlu' });
+  
+  try {
+    const data = JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: base64 } },
+          { type: 'text', text: 'Bu bir pasta gorseli. Bu pastayi analiz et ve asagidaki fiyatlandirma parametrelerine gore tahmini fiyat hesapla.\n\n' + priceInfo + '\n\nFormul: (ebat + kaplama + dolgu + altlik + sekil + renk + cicek + figur) x karmasiklik x kat carpani\n\nSADECE JSON formatinda yanit ver, baska hicbir sey yazma:\n{"ebat":"tahmini ebat adi","kaplama":"krem santi veya seker hamuru","dolgu":"tahmini dolgu","karmasiklik":"basit/orta/zor/ozel","kat":1,"sekil":"normal/kalp/retro/baton","renk_sayisi":1,"cicek":"varsa turu, yoksa yok","figur":"varsa turu, yoksa yok","altlik":"varsa turu, yoksa yok","tahmini_fiyat":0,"aciklama":"kisa aciklama"}' }
+        ]
+      }]
+    });
+
+    const options = {
+      hostname: 'api.anthropic.com',
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+        'anthropic-version': '2023-06-01',
+        'Content-Length': Buffer.byteLength(data)
+      }
+    };
+
+    const apiReq = https.request(options, (apiRes) => {
+      let body = '';
+      apiRes.on('data', c => body += c);
+      apiRes.on('end', () => {
+        try {
+          const result = JSON.parse(body);
+          res.json(result);
+        } catch (e) {
+          res.status(500).json({ error: 'API yanit parse hatasi', raw: body.substring(0, 500) });
+        }
+      });
+    });
+    apiReq.on('error', (e) => res.status(500).json({ error: e.message }));
+    apiReq.write(data);
+    apiReq.end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => { console.log('BY Pasta Telegram Bot - Port: ' + PORT + ' | Cron: 07:45 sabah, 21:00 yarim kalanlar'); });

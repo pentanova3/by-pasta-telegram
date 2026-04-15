@@ -55,34 +55,34 @@ function fMoney(n) { return String.fromCharCode(8378) + Number(n || 0).toLocaleS
 async function sabahBildirimi() {
   try {
     const orders = await loadData('byp_orders');
-    if (!orders || !orders.length) { await sendTelegram('Gunaydin! Bugun teslim edilecek siparis yok.'); return; }
+    if (!orders || !orders.length) { await sendTelegram('☀️ Günaydın! Bugün teslim edilecek sipariş yok.'); return; }
     const today = new Date().toISOString().split('T')[0];
     const todayOrders = orders.filter(o => o.date === today && ['bekliyor','uretimde','hazir','sevkiyat'].includes(o.status));
     const overdueOrders = orders.filter(o => o.date < today && ['bekliyor','uretimde'].includes(o.status));
     const allWaiting = orders.filter(o => o.status === 'bekliyor');
     const totalRev = todayOrders.reduce((s, o) => s + (o.discounted || o.price || 0), 0);
 
-    let msg = '<b>GUNAYDIN! BY Pasta Sabah Bildirimi</b>\n' + fDate(today) + '\n\n';
-    msg += '<b>Istatistikler:</b>\n';
-    msg += 'Bugun hazir olmasi gereken: <b>' + todayOrders.length + '</b> siparis\n';
-    msg += 'Toplam bekleyen: <b>' + allWaiting.length + '</b>\n';
-    if (overdueOrders.length > 0) msg += 'Gecikmis: <b>' + overdueOrders.length + '</b>\n';
+    let msg = '☀️ <b>GÜNAYDINN! By Pasta Sabah Bildirimi</b>\n📅 ' + fDate(today) + '\n\n';
+    msg += '📊 <b>İstatistikler:</b>\n';
+    msg += '🎂 Bugün hazır olması gereken: <b>' + todayOrders.length + '</b> sipariş\n';
+    msg += '⏳ Toplam bekleyen: <b>' + allWaiting.length + '</b>\n';
+    if (overdueOrders.length > 0) msg += '🔴 Gecikmiş: <b>' + overdueOrders.length + '</b>\n';
     msg += '\n';
 
     if (overdueOrders.length > 0) {
-      msg += '<b>GECIKMIS SIPARISLER:</b>\n';
-      overdueOrders.forEach(o => { msg += '  ' + o.orderNo + ' - ' + o.customer + ' (' + (o.branch||'') + ') Teslim: ' + fDate(o.date) + '\n'; });
+      msg += '🚨 <b>GECİKMİŞ SİPARİŞLER:</b>\n';
+      overdueOrders.forEach(o => { msg += '  ⚠️ ' + o.orderNo + ' - ' + o.customer + ' (' + (o.branch||'') + ') Teslim: ' + fDate(o.date) + '\n'; });
       msg += '\n';
     }
     if (todayOrders.length > 0) {
-      msg += '<b>BUGUN HAZIR OLMASI GEREKENLER:</b>\n';
+      msg += '📋 <b>BUGÜN HAZIR OLMASI GEREKENLER:</b>\n';
       todayOrders.forEach(o => {
-        const e = {bekliyor:'Bekliyor',uretimde:'Uretimde',hazir:'Hazir',sevkiyat:'Sevkiyat'};
-        msg += '  [' + (e[o.status]||o.status) + '] ' + o.orderNo + ' - ' + o.customer + '\n';
-        msg += '     ' + o.size + ' - ' + o.coating + ' - Saat: ' + o.time + ' - ' + (o.branch||'') + '\n';
+        const e = {bekliyor:'⏳ Bekliyor',uretimde:'🔨 Üretimde',hazir:'✅ Hazır',sevkiyat:'🚗 Sevkiyat'};
+        msg += '  ' + (e[o.status]||o.status) + ' | ' + o.orderNo + ' - ' + o.customer + '\n';
+        msg += '     🍰 ' + o.size + ' - ' + o.coating + ' | 🕐 ' + o.time + ' | 🏪 ' + (o.branch||'') + '\n';
       });
     }
-    msg += '\nHayirli mesailer!';
+    msg += '\n💪 Hayırlı mesailer!';
     await sendTelegram(msg);
   } catch (err) { console.error('Sabah hatasi:', err.message); }
 }
@@ -97,8 +97,8 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/', (req, res) => res.json({ status: 'BY Pasta Telegram Bot calisiyor', time: new Date().toISOString() }));
-app.get('/test', async (req, res) => { try { await sendTelegram('BY Pasta Telegram Bot - Test mesaji, sistem calisiyor!'); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
+app.get('/', (req, res) => res.json({ status: 'By Pasta Telegram Bot çalışıyor', time: new Date().toISOString() }));
+app.get('/test', async (req, res) => { try { await sendTelegram('✅ By Pasta Telegram Bot — Test mesajı, sistem çalışıyor!'); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.post('/sabah', async (req, res) => { await sabahBildirimi(); res.json({ ok: true }); });
 
 // 2. Bugun alinan + bugune hazir siparis
@@ -208,13 +208,12 @@ async function yarimKalanlar() {
     const now = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Istanbul'}));
     const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
 
-    // Bugun teslim edilmesi gerekip de hala arada kalan siparisler
     const stuck = orders.filter(o =>
       o.date === today &&
       ['bekliyor', 'uretimde', 'hazir', 'sevkiyat'].includes(o.status)
     );
 
-    if (stuck.length === 0) return; // Arada kalan yok, mesaj gonderme
+    if (stuck.length === 0) return;
 
     const byStatus = {};
     stuck.forEach(o => {
@@ -222,23 +221,23 @@ async function yarimKalanlar() {
       byStatus[o.status].push(o);
     });
 
-    const statusLabel = {bekliyor:'BEKLIYOR', uretimde:'URETIMDE', hazir:'HAZIR', sevkiyat:'SEVKIYATTA'};
+    const statusLabel = {bekliyor:'⏳ BEKLIYOR', uretimde:'🔨 ÜRETİMDE', hazir:'✅ HAZIR', sevkiyat:'🚗 SEVKİYATTA'};
 
-    let msg = '<b>DIKKAT! ARADA KALAN SIPARISLER</b>\n';
-    msg += 'Bugun teslim edilmesi gerekip de tamamlanmamis siparisler:\n\n';
-    msg += 'Toplam: <b>' + stuck.length + '</b> siparis\n\n';
+    let msg = '🔴 <b>DİKKAT! ARADA KALAN SİPARİŞLER</b>\n';
+    msg += '📅 Bugün teslim edilmesi gerekip de tamamlanmamış siparişler:\n\n';
+    msg += '📊 Toplam: <b>' + stuck.length + '</b> sipariş\n\n';
 
     Object.entries(byStatus).forEach(function(entry) {
       const status = entry[0];
       const list = entry[1];
       msg += '<b>' + (statusLabel[status] || status) + ' (' + list.length + '):</b>\n';
       list.forEach(o => {
-        msg += '  ' + o.orderNo + ' - ' + o.customer + ' (' + (o.branch||'') + ') Saat: ' + o.time + '\n';
+        msg += '  📋 ' + o.orderNo + ' - ' + o.customer + ' (🏪 ' + (o.branch||'') + ') 🕐 ' + o.time + '\n';
       });
       msg += '\n';
     });
 
-    msg += 'Bu siparisler ya iptal edilmeli, ya teslim edildi ya da teslim edilemedi olarak guncellenmeli!';
+    msg += '⚠️ Bu siparişler ya iptal edilmeli, ya teslim edildi ya da teslim edilemedi olarak güncellenmelidir!';
 
     await sendTelegram(msg);
   } catch (err) { console.error('Yarim kalan isler hatasi:', err.message); }

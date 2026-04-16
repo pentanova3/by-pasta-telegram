@@ -307,4 +307,4 @@ app.post('/ai-fiyat', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => { console.log('BY Pasta Telegram Bot - Port: ' + PORT + ' | Cron: 07:45 sabah, 21:00 yarim kalanlar'); });
+app.listen(PORT, () => { console.log('By Pasta Telegram Bot - Port: ' + PORT + ' | Cron: 07:45 sabah, 21:00 yarim kalanlar'); });

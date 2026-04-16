@@ -57,7 +57,7 @@ async function sabahBildirimi() {
     const orders = await loadData('byp_orders');
     if (!orders || !orders.length) { await sendTelegram('☀️ Günaydın! Bugün teslim edilecek sipariş yok.'); return; }
     const today = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Istanbul'})).toISOString().split('T')[0];
-    const todayOrders = orders.filter(o => o.date === today && ['bekliyor','uretimde','hazir','sevkiyat'].includes(o.status));
+    const todayOrders = orders.filter(o => o.date === today && ['bekliyor','uretimde','hazir','sevkiyat'].includes(o.status)).sort((a,b) => (a.time||'99:99').localeCompare(b.time||'99:99'));
     const overdueOrders = orders.filter(o => o.date < today && ['bekliyor','uretimde'].includes(o.status));
     const allWaiting = orders.filter(o => o.status === 'bekliyor');
     const totalRev = todayOrders.reduce((s, o) => s + (o.discounted || o.price || 0), 0);

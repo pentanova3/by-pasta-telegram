@@ -257,6 +257,34 @@ async function yarimKalanlar() {
 // Manuel endpoint
 app.post('/yarim-kalan', async (req, res) => { await yarimKalanlar(); res.json({ ok: true }); });
 
+// MÜŞTERİ ONAYI — müşteri confirm.html'den onayladığında
+app.post('/order-confirmed', async (req, res) => {
+  const { order } = req.body;
+  if (!order) return res.status(400).json({ error: 'order gerekli' });
+  const dateFmt = new Date(order.date + 'T00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  let msg = '✅ <b>MÜŞTERİ SİPARİŞİ ONAYLADI</b>\n\n';
+  msg += '📋 Sipariş: <b>' + order.orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + order.customer + '\n';
+  msg += '📅 Teslim: ' + dateFmt + ' - ' + (order.time || '-') + '\n';
+  msg += '🏪 Teslim Şubesi: ' + (order.delBranch || order.branch || '-') + '\n\n';
+  msg += '🎂 Sipariş üretime alınabilir.';
+  try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// MÜŞTERİ HATA BİLDİRDİ — müşteri confirm.html'de hata bildirdiğinde
+app.post('/order-rejected', async (req, res) => {
+  const { order, note } = req.body;
+  if (!order) return res.status(400).json({ error: 'order gerekli' });
+  const dateFmt = new Date(order.date + 'T00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  let msg = '⚠️ <b>MÜŞTERİ HATA BİLDİRDİ!</b>\n\n';
+  msg += '📋 Sipariş: <b>' + order.orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + order.customer + '\n';
+  msg += '📞 Telefon: ' + (order.phone || '-') + '\n';
+  msg += '📅 Teslim: ' + dateFmt + ' - ' + (order.time || '-') + '\n\n';
+  msg += '📝 <b>Müşteri Notu:</b>\n' + (note || '-') + '\n\n';
+  msg += '🚨 Lütfen müşteri ile iletişime geçip bilgileri düzeltin.';
+  try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
+});
 // AI FIYAT TAHMINI PROXY — tarayicidan CORS engeli oldugu icin Railway uzerinden
 app.post('/ai-fiyat', async (req, res) => {
   const { base64, mediaType, priceInfo } = req.body;

@@ -257,16 +257,31 @@ async function yarimKalanlar() {
 // Manuel endpoint
 app.post('/yarim-kalan', async (req, res) => { await yarimKalanlar(); res.json({ ok: true }); });
 
-// MÜŞTERİ ONAYI — müşteri confirm.html'den onayladığında
+// MÜŞTERİ ONAYI — müşteri confirm.html'den veya tezgahtar manuel onayladığında
 app.post('/order-confirmed', async (req, res) => {
-  const { order } = req.body;
+  const { order, method, staff } = req.body;
   if (!order) return res.status(400).json({ error: 'order gerekli' });
   const dateFmt = new Date(order.date + 'T00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
-  let msg = '✅ <b>MÜŞTERİ SİPARİŞİ ONAYLADI</b>\n\n';
+  
+  // Onay yöntemine göre başlık
+  let title = '✅ <b>MÜŞTERİ SİPARİŞİ ONAYLADI</b>';
+  let methodInfo = '';
+  if (method === 'phone') {
+    title = '📞 <b>SİPARİŞ TELEFONLA ONAYLANDI</b>';
+    methodInfo = '\n👷 Onay alan: ' + (staff || '-') + '\n';
+  } else if (method === 'signature') {
+    title = '✍️ <b>SİPARİŞ FİŞİ İMZALANDI</b>';
+    methodInfo = '\n👷 İmzalatan: ' + (staff || '-') + '\n';
+  } else if (order.confirmedByAdmin) {
+    title = '👤 <b>SİPARİŞ YÖNETİCİ TARAFINDAN ONAYLANDI</b>';
+    methodInfo = '\n👷 Yönetici: ' + order.confirmedByAdmin + '\n';
+  }
+  
+  let msg = title + '\n\n';
   msg += '📋 Sipariş: <b>' + order.orderNo + '</b>\n';
   msg += '👤 Müşteri: ' + order.customer + '\n';
   msg += '📅 Teslim: ' + dateFmt + ' - ' + (order.time || '-') + '\n';
-  msg += '🏪 Teslim Şubesi: ' + (order.delBranch || order.branch || '-') + '\n\n';
+  msg += '🏪 Teslim Şubesi: ' + (order.delBranch || order.branch || '-') + methodInfo + '\n';
   msg += '🎂 Sipariş üretime alınabilir.';
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });

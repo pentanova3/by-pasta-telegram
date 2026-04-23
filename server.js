@@ -35,7 +35,7 @@ function sendTelegram(text) {
       hostname: 'api.telegram.org',
       path: `/bot${TELEGRAM_TOKEN}/sendMessage`,
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(data) }
+      headers: { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(data) }
     };
     const req = https.request(options, res => {
       let body = '';
@@ -88,7 +88,7 @@ async function sabahBildirimi() {
 }
 
 const app = express();
-app.use(express.json());
+app.use(express.json({limit: '10mb'}));
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Content-Type');
@@ -342,7 +342,7 @@ app.post('/ai-fiyat', async (req, res) => {
       path: '/v1/messages',
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=utf-8',
         'x-api-key': process.env.ANTHROPIC_API_KEY || '',
         'anthropic-version': '2023-06-01',
         'Content-Length': Buffer.byteLength(data)
@@ -350,9 +350,10 @@ app.post('/ai-fiyat', async (req, res) => {
     };
 
     const apiReq = https.request(options, (apiRes) => {
-      let body = '';
-      apiRes.on('data', c => body += c);
+      const chunks = [];
+      apiRes.on('data', c => chunks.push(c));
       apiRes.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8');
         try {
           const result = JSON.parse(body);
           res.json(result);

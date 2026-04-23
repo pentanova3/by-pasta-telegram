@@ -203,6 +203,25 @@ app.post('/tezgahtar-notu', async (req, res) => {
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// MILESTONE — Ay içi 100. (200., 300. ...) sipariş bildirimi
+app.post('/milestone', async (req, res) => {
+  const { milestoneNo, orderNo, customer, phone, branch, size, coating, price, discount, discounted, applied, by, date, time } = req.body;
+  const indirimSatiri = applied
+    ? '🎁 Otomatik %5 indirim uygulandı\n💰 Fiyat: <s>' + fMoney(price) + '</s> → <b>' + fMoney(discounted) + '</b>'
+    : 'ℹ️ Manuel indirim (%' + discount + ') zaten uygulanmış, milestone indirimi devreye girmedi\n💰 Fiyat: <b>' + fMoney(discounted) + '</b>';
+  let msg = '🎉 <b>' + milestoneNo + '. SİPARİŞ!</b>\n';
+  msg += '📊 Bu ay ' + milestoneNo + '. siparişe ulaşıldı!\n\n';
+  msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + customer + '\n';
+  msg += '📞 ' + (phone || '-') + '\n';
+  msg += '🏪 Şube: ' + (branch || '-') + '\n';
+  msg += '🎂 ' + (size || '-') + ' · ' + (coating || '-') + '\n';
+  msg += '📅 Teslim: ' + (date || '-') + ' - ' + (time || '-') + '\n';
+  msg += '👷 Alan: ' + (by || '-') + '\n\n';
+  msg += indirimSatiri;
+  try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // CRON: Sabah 07:45 Turkiye
 cron.schedule('45 7 * * *', () => { console.log('CRON: Sabah'); sabahBildirimi(); }, { timezone: 'Europe/Istanbul' });
 

@@ -202,6 +202,24 @@ app.post('/tezgahtar-notu', async (req, res) => {
   msg += '👷 Yazan: ' + by;
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
+// 9. Uretime geri gonderme (iade)
+app.post('/order-rework', async (req, res) => {
+  const { order, reworkCount, reason, sentBy, sentByRole } = req.body;
+  if (!order) return res.status(400).json({ error: 'order zorunlu' });
+  let msg = '🔴 <b>URETIME GERI GONDERILDI - IADE</b>' + String.fromCharCode(10) + String.fromCharCode(10);
+  msg += '📋 Sipariş: <b>' + (order.orderNo||'') + '</b>' + String.fromCharCode(10);
+  msg += '👤 Müşteri: ' + (order.customer||'') + String.fromCharCode(10);
+  msg += '🏪 Şube: ' + (order.branch||'-') + String.fromCharCode(10);
+  msg += '🔢 İade No: <b>' + (reworkCount||1) + '. iade</b>' + String.fromCharCode(10);
+  msg += '📌 Sebep: ' + (reason||'-') + String.fromCharCode(10);
+  msg += '👷 Geri gönderen: ' + (sentBy||'-') + (sentByRole?(' (' + sentByRole + ')'):'') + String.fromCharCode(10) + String.fromCharCode(10);
+  msg += '⚡ Pasta üretim panosunda <b>Üretimde</b> sütununa kırmızı bantlı olarak geri döndü.';
+  if(reworkCount && reworkCount > 1){
+    msg += String.fromCharCode(10) + String.fromCharCode(10) + '⚠️ <b>Bu sipariş ' + reworkCount + '. kez iade edildi!</b>';
+  }
+  try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 
 // MILESTONE — Ay içi 100. (200., 300. ...) sipariş bildirimi
 app.post('/milestone', async (req, res) => {

@@ -332,6 +332,7 @@ app.post('/order-rejected', async (req, res) => {
   msg += '📋 Sipariş: <b>' + order.orderNo + '</b>\n';
   msg += '👤 Müşteri: ' + order.customer + '\n';
   msg += '📞 Telefon: ' + (order.phone || '-') + '\n';
+  msg += '👷 Siparişi alan: ' + (order.staffName || '-') + (order.branch ? ' (' + order.branch + ')' : '') + '\n';
   msg += '📅 Teslim: ' + dateFmt + ' - ' + (order.time || '-') + '\n\n';
   msg += '📝 <b>Müşteri Notu:</b>\n' + (note || '-') + '\n\n';
   msg += '🚨 Lütfen müşteri ile iletişime geçip bilgileri düzeltin.';

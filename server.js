@@ -48,7 +48,7 @@ function sendTelegram(text) {
   });
 }
 
-function fDate(d) { return d ? new Date(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'; }
+function fDate(d) { return d ? new Date(d).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '-'; }
 function fMoney(n) { return String.fromCharCode(8378) + Number(n || 0).toLocaleString('tr-TR'); }
 
 // SABAH 07:45
@@ -317,7 +317,7 @@ app.post('/yarim-kalan', async (req, res) => { await yarimKalanlar(); res.json({
 app.post('/order-confirmed', async (req, res) => {
   const { order, method, staff } = req.body;
   if (!order) return res.status(400).json({ error: 'order gerekli' });
-  const dateFmt = new Date(order.date + 'T00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dateFmt = new Date(order.date + 'T00:00').toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   
   // Onay yöntemine göre başlık
   let title = '✅ <b>MÜŞTERİ SİPARİŞİ ONAYLADI</b>';
@@ -346,7 +346,7 @@ app.post('/order-confirmed', async (req, res) => {
 app.post('/order-rejected', async (req, res) => {
   const { order, note } = req.body;
   if (!order) return res.status(400).json({ error: 'order gerekli' });
-  const dateFmt = new Date(order.date + 'T00:00').toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const dateFmt = new Date(order.date + 'T00:00').toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   let msg = '⚠️ <b>MÜŞTERİ HATA BİLDİRDİ!</b>\n\n';
   msg += '📋 Sipariş: <b>' + order.orderNo + '</b>\n';
   msg += '👤 Müşteri: ' + order.customer + '\n';

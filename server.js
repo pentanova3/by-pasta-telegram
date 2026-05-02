@@ -240,6 +240,25 @@ app.post('/milestone', async (req, res) => {
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+
+// 10. VIP / Ozel siparis bildirimi
+app.post('/order-vip', async (req, res) => {
+  const { orderNo, customer, phone, branch, size, coating, complexity, layers, price, reason, vipBy, vipByRole, staffName, date, time } = req.body;
+  let msg = '🚨 <b>ÖZEL / VIP SİPARİŞ ALINDI</b>\n\n';
+  msg += '📋 Sipariş: <b>' + (orderNo||'-') + '</b>\n';
+  msg += '👤 Müşteri: ' + (customer||'-') + '\n';
+  msg += '📞 Telefon: ' + (phone||'-') + '\n';
+  msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  msg += '🎂 ' + (size||'-') + ' · ' + (coating||'-') + (complexity?(' · '+complexity):'') + (layers?(' · '+layers+' kat'):'') + '\n';
+  msg += '💰 Fiyat: ' + fMoney(price||0) + '\n';
+  msg += '📅 Teslim: ' + (date||'-') + ' - ' + (time||'-') + '\n';
+  msg += '👷 Siparişi alan: ' + (staffName||'-') + '\n';
+  msg += '✓ VIP modu aktif eden: ' + (vipBy||'-') + (vipByRole?(' (' + vipByRole + ')'):'') + '\n\n';
+  msg += '🔴 <b>GEREKÇE:</b>\n' + (reason||'-') + '\n\n';
+  msg += '⚡ Bu siparişte standart kurallar (saat sınırı, karmaşıklık, çok kat) uygulanmamıştır.';
+  try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // CRON: Sabah 07:45 Turkiye
 cron.schedule('45 7 * * *', () => { console.log('CRON: Sabah'); sabahBildirimi(); }, { timezone: 'Europe/Istanbul' });
 

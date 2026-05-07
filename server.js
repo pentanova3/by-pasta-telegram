@@ -55,16 +55,34 @@ function fMoney(n) { return String.fromCharCode(8378) + Number(n || 0).toLocaleS
 async function sabahBildirimi() {
   try {
     const orders = await loadData('byp_orders');
-    if (!orders || !orders.length) { await sendTelegram('☀️ Günaydın! Bugün teslim edilecek sipariş yok.'); return; }
     const today = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Istanbul'})).toISOString().split('T')[0];
+    const todayD = new Date(today + 'T00:00');
+    const isSaturday = todayD.getDay() === 6;
+    let tomorrowDate = '';
+    if (isSaturday) {
+      const tmr = new Date(todayD);
+      tmr.setDate(tmr.getDate() + 1);
+      tomorrowDate = tmr.getFullYear() + '-' + String(tmr.getMonth() + 1).padStart(2, '0') + '-' + String(tmr.getDate()).padStart(2, '0');
+    }
+
+    if (!orders || !orders.length) { await sendTelegram('☀️ Günaydın! Bugün teslim edilecek sipariş yok.'); return; }
+
     const todayOrders = orders.filter(o => o.date === today && ['bekliyor','uretimde','hazir','sevkiyat'].includes(o.status)).sort((a,b) => (a.time||'99:99').localeCompare(b.time||'99:99'));
+    const sundayOrders = isSaturday ? orders.filter(o => o.date === tomorrowDate && ['bekliyor','uretimde','hazir','sevkiyat'].includes(o.status)).sort((a,b) => (a.time||'99:99').localeCompare(b.time||'99:99')) : [];
+    // Yarin sabah erken teslim siparisleri (yarin saat 10:00 oncesi teslim) - cumartesi-pazar mantigi disinda
+    const earlyMorningOrders = !isSaturday ? orders.filter(o => o.date === tomorrowDate && (o.time||'99:99') < '10:00' && ['bekliyor','uretimde','hazir','sevkiyat'].includes(o.status)).sort((a,b) => (a.time||'99:99').localeCompare(b.time||'99:99')) : [];
     const overdueOrders = orders.filter(o => o.date < today && ['bekliyor','uretimde'].includes(o.status));
     const allWaiting = orders.filter(o => o.status === 'bekliyor');
-    const totalRev = todayOrders.reduce((s, o) => s + (o.discounted || o.price || 0), 0);
 
     let msg = '☀️ <b>GÜNAYDINN! By Pasta Sabah Bildirimi</b>\n📅 ' + fDate(today) + '\n\n';
     msg += '📊 <b>İstatistikler:</b>\n';
     msg += '🎂 Bugün hazır olması gereken: <b>' + todayOrders.length + '</b> sipariş\n';
+    if (isSaturday && sundayOrders.length > 0) {
+      msg += '🌙 Yarın pazar (bugün hazırlanmalı): <b>' + sundayOrders.length + '</b> sipariş\n';
+    }
+    if (!isSaturday && earlyMorningOrders.length > 0) {
+      msg += '🌅 Yarın sabah erken teslim (bugün hazırlanmalı): <b>' + earlyMorningOrders.length + '</b> sipariş\n';
+    }
     msg += '⏳ Toplam bekleyen: <b>' + allWaiting.length + '</b>\n';
     if (overdueOrders.length > 0) msg += '🔴 Gecikmiş: <b>' + overdueOrders.length + '</b>\n';
     msg += '\n';
@@ -81,11 +99,33 @@ async function sabahBildirimi() {
         msg += '  ' + (e[o.status]||o.status) + ' | ' + o.orderNo + ' - ' + o.customer + '\n';
         msg += '     🍰 ' + o.size + ' - ' + o.coating + ' | 🕐 ' + o.time + ' | 🏪 ' + (o.branch||'') + '\n';
       });
+      msg += '\n';
     }
-    msg += '\n💪 Hayırlı mesailer!';
+    if (isSaturday && sundayOrders.length > 0) {
+      msg += '🌙 <b>YARIN PAZAR — BUGÜN HAZIRLANMALI:</b>\n';
+      msg += '<i>İşletme pazar günü tatil. Aşağıdaki siparişler bugün (cumartesi) hazırlanmalıdır.</i>\n\n';
+      sundayOrders.forEach(o => {
+        const e = {bekliyor:'⏳ Bekliyor',uretimde:'🔨 Üretimde',hazir:'✅ Hazır',sevkiyat:'🚗 Sevkiyat'};
+        msg += '  ' + (e[o.status]||o.status) + ' | <b>' + o.orderNo + '</b> - ' + o.customer + ' <b>⚠ PAZAR TESLİM</b>\n';
+        msg += '     🍰 ' + o.size + ' - ' + o.coating + ' | 🕐 ' + o.time + ' | 🏪 ' + (o.branch||'') + '\n';
+      });
+      msg += '\n';
+    }
+    if (!isSaturday && earlyMorningOrders.length > 0) {
+      msg += '🌅 <b>YARIN SABAH ERKEN TESLİM — BUGÜN HAZIRLANMALI:</b>\n';
+      msg += '<i>Aşağıdaki siparişler yarın sabah 10:00 öncesi teslim alınacak. Pastane sabah açılmadan hazır olmaları gerektiği için bugün (gece kapanışından önce) hazırlanmalıdır.</i>\n\n';
+      earlyMorningOrders.forEach(o => {
+        const e = {bekliyor:'⏳ Bekliyor',uretimde:'🔨 Üretimde',hazir:'✅ Hazır',sevkiyat:'🚗 Sevkiyat'};
+        msg += '  ' + (e[o.status]||o.status) + ' | <b>' + o.orderNo + '</b> - ' + o.customer + ' <b>⚠ ' + o.time + '</b>\n';
+        msg += '     🍰 ' + o.size + ' - ' + o.coating + ' | 🏪 ' + (o.branch||'') + '\n';
+      });
+      msg += '\n';
+    }
+    msg += '💪 Hayırlı mesailer!';
     await sendTelegram(msg);
   } catch (err) { console.error('Sabah hatasi:', err.message); }
 }
+
 
 const app = express();
 app.use(express.json({limit: '10mb'}));

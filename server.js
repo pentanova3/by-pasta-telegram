@@ -448,4 +448,16 @@ app.post('/ai-fiyat', async (req, res) => {
   }
 });
 
+// BETA GERI BILDIRIM — kullanici tarafindan bildirilmis sorun/oneri
+app.post('/feedback', async (req, res) => {
+  const { message, docId } = req.body;
+  if (!message) return res.status(400).json({ error: 'message zorunlu' });
+  try {
+    await sendTelegram(message);
+    res.json({ ok: true, docId: docId || null });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => { console.log('By Pasta Telegram Bot - Port: ' + PORT + ' | Cron: 07:45 sabah, 21:00 yarim kalanlar'); });

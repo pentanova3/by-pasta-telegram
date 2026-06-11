@@ -141,17 +141,6 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => res.json({ status: 'By Pasta Telegram Bot çalışıyor', time: new Date().toISOString() }));
-// GEÇİCİ TANI — Firestore erişim hatasını yüzeye çıkarır. Sorun çözülünce kaldırılacak.
-app.get('/debug-fs', async (req, res) => {
-  try {
-    const doc = await db.collection('config').doc('byp_orders').get();
-    const projectId = (serviceAccount && serviceAccount.project_id) || '?';
-    const clientEmail = (serviceAccount && serviceAccount.client_email) || '?';
-    res.json({ ok: true, exists: doc.exists, projectId, clientEmail, hasValue: doc.exists ? !!(doc.data() && doc.data().value) : false });
-  } catch (e) {
-    res.json({ ok: false, errName: e.name, errCode: e.code, errMsg: e.message });
-  }
-});
 app.get('/test', async (req, res) => { try { await sendTelegram('✅ By Pasta Telegram Bot — Test mesajı, sistem çalışıyor!'); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); } });
 app.post('/sabah', async (req, res) => { await sabahBildirimi(); res.json({ ok: true }); });
 app.get('/debug-sabah', async (req, res) => {

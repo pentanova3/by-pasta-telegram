@@ -77,7 +77,7 @@ async function sabahBildirimi() {
     const overdueOrders = orders.filter(o => o.date < today && ['bekliyor','uretimde'].includes(o.status));
     const allWaiting = orders.filter(o => o.status === 'bekliyor');
 
-    let msg = '☀️ <b>GÜNAYDINN! By Pasta Sabah Bildirimi</b>\n📅 ' + fDate(today) + '\n\n';
+    let msg = '☀️ <b>Günaydın Değerli Çalışma Arkadaşlarım</b>\n<b>By Pasta Sabah Bildirimi</b>\n📅 ' + fDate(today) + '\n\n';
     msg += '📊 <b>İstatistikler:</b>\n';
     msg += '🎂 Bugün hazır olması gereken: <b>' + todayOrders.length + '</b> sipariş\n';
     if (isSaturday && sundayOrders.length > 0) {
@@ -86,7 +86,6 @@ async function sabahBildirimi() {
     if (!isSaturday && earlyMorningOrders.length > 0) {
       msg += '🌅 Yarın sabah erken teslim (bugün hazırlanmalı): <b>' + earlyMorningOrders.length + '</b> sipariş\n';
     }
-    msg += '⏳ Toplam bekleyen: <b>' + allWaiting.length + '</b>\n';
     if (overdueOrders.length > 0) msg += '🔴 Gecikmiş: <b>' + overdueOrders.length + '</b>\n';
     msg += '\n';
 
@@ -95,11 +94,14 @@ async function sabahBildirimi() {
       overdueOrders.forEach(o => { msg += '  ⚠️ ' + o.orderNo + ' - ' + o.customer + ' (' + (o.branch||'') + ') Teslim: ' + fDate(o.date) + '\n'; });
       msg += '\n';
     }
+
+    // Bugün hazırlanacak tüm siparişler tek bir sıra numarası akışıyla listelenir (pazar/erken teslim dahil)
+    let sira = 0;
     if (todayOrders.length > 0) {
       msg += '📋 <b>BUGÜN HAZIR OLMASI GEREKENLER:</b>\n';
       todayOrders.forEach(o => {
         const e = {bekliyor:'⏳ Bekliyor',uretimde:'🔨 Üretimde',hazir:'✅ Hazır',sevkiyat:'🚗 Sevkiyat'};
-        msg += '  ' + (e[o.status]||o.status) + ' | ' + o.orderNo + ' - ' + o.customer + '\n';
+        msg += '  <b>' + (++sira) + '.</b> ' + (e[o.status]||o.status) + ' | ' + o.orderNo + ' - ' + o.customer + '\n';
         msg += '     🍰 ' + o.size + ' - ' + o.coating + ' | 🕐 ' + o.time + ' | 🏪 ' + (o.branch||'') + '\n';
       });
       msg += '\n';
@@ -109,7 +111,7 @@ async function sabahBildirimi() {
       msg += '<i>İşletme pazar günü tatil. Aşağıdaki siparişler bugün (cumartesi) hazırlanmalıdır.</i>\n\n';
       sundayOrders.forEach(o => {
         const e = {bekliyor:'⏳ Bekliyor',uretimde:'🔨 Üretimde',hazir:'✅ Hazır',sevkiyat:'🚗 Sevkiyat'};
-        msg += '  ' + (e[o.status]||o.status) + ' | <b>' + o.orderNo + '</b> - ' + o.customer + ' <b>⚠ PAZAR TESLİM</b>\n';
+        msg += '  <b>' + (++sira) + '.</b> ' + (e[o.status]||o.status) + ' | <b>' + o.orderNo + '</b> - ' + o.customer + ' <b>⚠ PAZAR TESLİM</b>\n';
         msg += '     🍰 ' + o.size + ' - ' + o.coating + ' | 🕐 ' + o.time + ' | 🏪 ' + (o.branch||'') + '\n';
       });
       msg += '\n';
@@ -119,7 +121,7 @@ async function sabahBildirimi() {
       msg += '<i>Aşağıdaki siparişler yarın sabah 10:00 öncesi teslim alınacak. Pastane sabah açılmadan hazır olmaları gerektiği için bugün (gece kapanışından önce) hazırlanmalıdır.</i>\n\n';
       earlyMorningOrders.forEach(o => {
         const e = {bekliyor:'⏳ Bekliyor',uretimde:'🔨 Üretimde',hazir:'✅ Hazır',sevkiyat:'🚗 Sevkiyat'};
-        msg += '  ' + (e[o.status]||o.status) + ' | <b>' + o.orderNo + '</b> - ' + o.customer + ' <b>⚠ ' + o.time + '</b>\n';
+        msg += '  <b>' + (++sira) + '.</b> ' + (e[o.status]||o.status) + ' | <b>' + o.orderNo + '</b> - ' + o.customer + ' <b>⚠ ' + o.time + '</b>\n';
         msg += '     🍰 ' + o.size + ' - ' + o.coating + ' | 🏪 ' + (o.branch||'') + '\n';
       });
       msg += '\n';

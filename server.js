@@ -359,6 +359,21 @@ async function yarimKalanlar() {
 app.post('/yarim-kalan', async (req, res) => { await yarimKalanlar(); res.json({ ok: true }); });
 
 // MÜŞTERİ ONAYI — müşteri confirm.html'den veya tezgahtar manuel onayladığında
+// Kaybolup gölge kayıttan otomatik geri yüklenen sipariş — DİKKAT çekici uyarı
+app.post('/order-recovered', async (req, res) => {
+  try {
+    const o = req.body || {};
+    let msg = '🛟 <b>OTOMATİK KURTARILAN SİPARİŞ</b>\n';
+    msg += '<i>Sistemden kaybolmuş bir sipariş gölge kayıttan geri yüklendi. Lütfen siparişi açıp bilgilerini kontrol edin.</i>\n\n';
+    msg += '📋 Sipariş: <b>' + (o.orderNo || '-') + '</b>\n';
+    msg += '👤 Müşteri: ' + (o.customer || '-') + '\n';
+    if (o.date) msg += '📅 Teslim: ' + o.date + (o.time ? ' - ' + o.time : '') + '\n';
+    if (o.branch) msg += '🏪 Şube: ' + o.branch + '\n';
+    await sendTelegram(msg);
+    res.json({ ok: true });
+  } catch (err) { console.error('order-recovered:', err.message); res.status(500).json({ error: err.message }); }
+});
+
 app.post('/order-confirmed', async (req, res) => {
   const { order, method, staff } = req.body;
   if (!order) return res.status(400).json({ error: 'order gerekli' });

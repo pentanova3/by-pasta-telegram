@@ -307,8 +307,8 @@ app.post('/order-vip', async (req, res) => {
 // CRON: Sabah 07:45 Turkiye
 cron.schedule('45 7 * * *', () => { console.log('CRON: Sabah'); sabahBildirimi(); }, { timezone: 'Europe/Istanbul' });
 
-// CRON: Gun sonu 21:00 — yarim kalan isler
-cron.schedule('0 21 * * *', () => { console.log('CRON: Yarim kalan isler'); yarimKalanlar(); }, { timezone: 'Europe/Istanbul' });
+// CRON: Gece 23:00 — yarim kalan isler
+cron.schedule('0 23 * * *', () => { console.log('CRON: Yarim kalan isler'); yarimKalanlar(); }, { timezone: 'Europe/Istanbul' });
 // Her akşam 20:00: geri bildirim hatırlatması (teslim edilmiş, geri bildirimi istenmemiş siparişler)
 cron.schedule('0 20 * * *', () => { console.log('CRON: Geri bildirim hatirlatmasi'); geriBildirimHatirlatma(); }, { timezone: 'Europe/Istanbul' });
 
@@ -509,4 +509,4 @@ app.post('/feedback', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => { console.log('By Pasta Telegram Bot - Port: ' + PORT + ' | Cron: 07:45 sabah, 21:00 yarim kalanlar'); });
+app.listen(PORT, () => { console.log('By Pasta Telegram Bot - Port: ' + PORT + ' | Cron: 07:45 sabah, 20:00 geri bildirim, 23:00 yarim kalanlar'); });

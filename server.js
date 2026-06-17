@@ -309,6 +309,8 @@ cron.schedule('45 7 * * *', () => { console.log('CRON: Sabah'); sabahBildirimi()
 
 // CRON: Gun sonu 21:00 — yarim kalan isler
 cron.schedule('0 21 * * *', () => { console.log('CRON: Yarim kalan isler'); yarimKalanlar(); }, { timezone: 'Europe/Istanbul' });
+// Her akşam 20:00: geri bildirim hatırlatması (teslim edilmiş, geri bildirimi istenmemiş siparişler)
+cron.schedule('0 20 * * *', () => { console.log('CRON: Geri bildirim hatirlatmasi'); geriBildirimHatirlatma(); }, { timezone: 'Europe/Istanbul' });
 
 // YARIM KALAN ISLER — gun sonunda tamamlanmamis siparisler
 async function yarimKalanlar() {
@@ -357,6 +359,33 @@ async function yarimKalanlar() {
 
 // Manuel endpoint
 app.post('/yarim-kalan', async (req, res) => { await yarimKalanlar(); res.json({ ok: true }); });
+
+// GERİ BİLDİRİM HATIRLATMASI — her akşam: teslim edilmiş ama geri bildirimi istenmemiş siparişler
+async function geriBildirimHatirlatma() {
+  console.log('Geri bildirim hatirlatmasi...');
+  try {
+    const orders = await loadData('byp_orders');
+    if (!orders || !orders.length) return;
+    const now = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Istanbul'}));
+    const dStr = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const y = new Date(now); y.setDate(now.getDate()-1);
+    const o10 = new Date(now); o10.setDate(now.getDate()-10);
+    const yStr = dStr(y), oStr = dStr(o10);
+    const pending = orders.filter(o =>
+      o.status === 'teslim' && !o.customerFeedback && !o.fbRequestedAt &&
+      (o.phone||'').trim() && (o.date||'') <= yStr && (o.date||'') >= oStr
+    ).sort((a,b) => String(b.date||'').localeCompare(String(a.date||'')));
+    if (!pending.length) return; // bekleyen yoksa sessiz geç
+    const shortD = d => { try { return new Date(d+'T00:00').toLocaleDateString('tr-TR',{day:'numeric',month:'long'}); } catch(e){ return d||'-'; } };
+    let msg = '📲 <b>GERİ BİLDİRİM HATIRLATMASI</b>\n';
+    msg += '<i>Teslim edilmiş, henüz geri bildirim istenmemiş siparişler. Panelden "📲 Toplu geri bildirim" ile gönderin.</i>\n\n';
+    msg += '📊 Bekleyen: <b>' + pending.length + '</b> sipariş\n\n';
+    pending.slice(0,30).forEach(o => { msg += '  • ' + o.orderNo + ' — ' + o.customer + ' (🗓️ ' + shortD(o.date) + ')\n'; });
+    if (pending.length > 30) msg += '\n…ve ' + (pending.length - 30) + ' sipariş daha.';
+    await sendTelegram(msg);
+  } catch (err) { console.error('Geri bildirim hatirlatmasi hatasi:', err.message); }
+}
+app.post('/geri-bildirim-hatirlatma', async (req, res) => { await geriBildirimHatirlatma(); res.json({ ok: true }); });
 
 // MÜŞTERİ ONAYI — müşteri confirm.html'den veya tezgahtar manuel onayladığında
 // Kaybolup gölge kayıttan otomatik geri yüklenen sipariş — DİKKAT çekici uyarı

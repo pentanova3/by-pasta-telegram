@@ -497,6 +497,57 @@ app.post('/ai-fiyat', async (req, res) => {
   }
 });
 
+// AI MÜŞTERİ YORUMU YANITI — müşteri yorumuna marka sesiyle nazik bir cevap taslağı üretir
+app.post('/ai-yorum-cevap', async (req, res) => {
+  const { comment, visual, taste, service, customer, orderNo } = req.body;
+  try {
+    const firstName = String(customer || '').trim().split(/\s+/)[0] || 'değerli müşterimiz';
+    const ratingTxt = [visual, taste, service].some(v => v != null)
+      ? `Görsel: ${visual ?? '-'}/5, Lezzet: ${taste ?? '-'}/5, Hizmet: ${service ?? '-'}/5`
+      : 'Puan belirtilmemiş';
+    const sys = 'Sen By Pasta adlı butik pasta markasının müşteri ilişkileri sorumlususun. '
+      + 'Müşterilerin sipariş sonrası bıraktığı yorumlara WhatsApp üzerinden gönderilecek kısa, samimi ve profesyonel bir Türkçe yanıt yazarsın. '
+      + 'Kurallar: Müşteriye adıyla nazikçe hitap et. Olumlu yorumlarda içtenlikle teşekkür et. '
+      + 'Olumsuz/eleştirel yorumlarda asla savunmacı, suçlayıcı veya soğuk olma; empati kur, gerekiyorsa özür dile, '
+      + 'sorunu ciddiye aldığını belirt ve telafi/çözüm niyetini içtenlikle ifade et. '
+      + 'Abartılı vaat verme, indirim/iade sözü verme (bunu işletme karar verir). '
+      + '2-4 cümle, sıcak ama ölçülü bir dil, en fazla 1-2 uygun emoji. Sonunda "By Pasta" imzası. '
+      + 'SADECE gönderilecek yanıt metnini yaz, başka hiçbir açıklama, başlık veya tırnak ekleme.';
+    const userText = `Müşteri adı: ${firstName}\nSipariş no: ${orderNo || '-'}\nPuanlar: ${ratingTxt}\nMüşteri yorumu: "${(comment || '').trim() || '(yorum yazmamış, sadece puan vermiş)'}"`;
+    const data = JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 500,
+      system: sys,
+      messages: [{ role: 'user', content: userText }]
+    });
+    const options = {
+      hostname: 'api.anthropic.com',
+      path: '/v1/messages',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'x-api-key': process.env.ANTHROPIC_API_KEY || '',
+        'anthropic-version': '2023-06-01',
+        'Content-Length': Buffer.byteLength(data)
+      }
+    };
+    const apiReq = https.request(options, (apiRes) => {
+      const chunks = [];
+      apiRes.on('data', c => chunks.push(c));
+      apiRes.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8');
+        try { res.json(JSON.parse(body)); }
+        catch (e) { res.status(500).json({ error: 'API yanit parse hatasi', raw: body.substring(0, 500) }); }
+      });
+    });
+    apiReq.on('error', (e) => res.status(500).json({ error: e.message }));
+    apiReq.write(data);
+    apiReq.end();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // BETA GERI BILDIRIM — kullanici tarafindan bildirilmis sorun/oneri
 app.post('/feedback', async (req, res) => {
   const { message, docId } = req.body;

@@ -227,13 +227,15 @@ app.post('/teslim-edilemedi', async (req, res) => {
 
 // 7. Musteri geri bildirimi
 app.post('/geri-bildirim', async (req, res) => {
-  const { orderNo, customer, branch, feedback, by } = req.body;
+  const { orderNo, customer, branch, feedback, by, deliveryDate, submittedAt } = req.body;
   let msg = '⭐ <b>MÜŞTERİ GERİ BİLDİRİMİ</b>\n\n';
   msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
   msg += '👤 Müşteri: ' + customer + '\n';
   msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  if (deliveryDate) msg += '📅 Teslim tarihi: ' + deliveryDate + '\n';
   msg += '💬 Değerlendirme: ' + feedback + '\n';
   msg += '📌 Kaynak: ' + by;
+  if (submittedAt) msg += '\n🕒 Geri bildirim tarihi: ' + submittedAt;
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

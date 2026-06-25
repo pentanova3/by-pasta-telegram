@@ -213,6 +213,42 @@ app.post('/acil', async (req, res) => {
   try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// 5b. Tarih guncelleme (bugune cekilmeyen tum tarih degisiklikleri - one/ileri)
+app.post('/tarih-guncelleme', async (req, res) => {
+  const { orderNo, customer, size, coating, branch, time, reason, by, oldDate, newDate, dir } = req.body;
+  const yon = dir === 'ileri' ? 'ileri alındı ⏩' : 'öne alındı ⏪';
+  let msg = '📅 <b>TESLİM TARİHİ DEĞİŞTİ</b>\n';
+  msg += '🔄 Tarih ' + yon + '\n\n';
+  msg += '📅 Eski tarih: ' + oldDate + '\n';
+  msg += '📅 Yeni tarih: <b>' + newDate + '</b>\n\n';
+  msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + customer + '\n';
+  msg += '🍰 ' + (size||'-') + ' - ' + (coating||'-') + '\n';
+  msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  msg += '🕐 Teslim saati: ' + (time||'-') + '\n';
+  msg += '📌 Gerekçe: ' + reason + '\n';
+  msg += '👷 Güncelleyen: ' + by;
+  try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// 5c. Saat guncelleme (tum saat degisiklikleri - one/ileri)
+app.post('/saat-guncelleme', async (req, res) => {
+  const { orderNo, customer, size, coating, branch, date, reason, by, oldTime, newTime, dir } = req.body;
+  const yon = dir === 'ileri' ? 'ileri alındı ⏩' : 'öne alındı ⏪';
+  let msg = '🕐 <b>TESLİM SAATİ DEĞİŞTİ</b>\n';
+  msg += '🔄 Saat ' + yon + '\n\n';
+  msg += '🕐 Eski saat: ' + oldTime + '\n';
+  msg += '🕐 Yeni saat: <b>' + newTime + '</b>\n\n';
+  msg += '📋 Sipariş: <b>' + orderNo + '</b>\n';
+  msg += '👤 Müşteri: ' + customer + '\n';
+  msg += '🍰 ' + (size||'-') + ' - ' + (coating||'-') + '\n';
+  msg += '🏪 Şube: ' + (branch||'-') + '\n';
+  msg += '📅 Teslim tarihi: ' + (date||'-') + '\n';
+  msg += '📌 Gerekçe: ' + reason + '\n';
+  msg += '👷 Güncelleyen: ' + by;
+  try { await sendTelegram(msg); res.json({ ok: true }); } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // 6. Teslim edilemedi
 app.post('/teslim-edilemedi', async (req, res) => {
   const { orderNo, customer, branch, reason, by } = req.body;

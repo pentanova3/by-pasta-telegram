@@ -407,8 +407,10 @@ async function geriBildirimHatirlatma() {
     const now = new Date(new Date().toLocaleString('en-US', {timeZone:'Europe/Istanbul'}));
     const dStr = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     const y = new Date(now); y.setDate(now.getDate()-1);
-    const o10 = new Date(now); o10.setDate(now.getDate()-10);
-    const yStr = dStr(y), oStr = dStr(o10);
+    // Son 2 gün ile sınırlı: yalnızca dün ve evvelsi gün teslim edilenler hatırlatılır.
+    // Daha eski teslimler için hatırlatma GÖNDERİLMEZ (kullanıcı isteği).
+    const lo = new Date(now); lo.setDate(now.getDate()-2);
+    const yStr = dStr(y), oStr = dStr(lo);
     const pending = orders.filter(o =>
       o.status === 'teslim' && !o.customerFeedback && !o.fbRequestedAt &&
       (o.phone||'').trim() && (o.date||'') <= yStr && (o.date||'') >= oStr
